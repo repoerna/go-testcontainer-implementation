@@ -6,6 +6,7 @@ import (
 	"github.com/docker/go-connections/nat"
 	"github.com/golang-migrate/migrate/v4"
 	"github.com/golang-migrate/migrate/v4/database/postgres"
+	_ "github.com/golang-migrate/migrate/v4/source/file"
 	"github.com/testcontainers/testcontainers-go"
 	"github.com/testcontainers/testcontainers-go/wait"
 	"log"
@@ -95,7 +96,7 @@ func SpinUpPostgres(ctx context.Context) (testcontainers.Container, error) {
 	return container, nil
 }
 
-func runMigration(ctx context.Context, filepath string) error {
+func RunMigration(ctx context.Context, filepath string) error {
 	conn, err := Conn(ctx)
 	if err != nil {
 		return err
@@ -126,4 +127,21 @@ func runMigration(ctx context.Context, filepath string) error {
 
 	return nil
 
+}
+
+func TruncateTable(ctx context.Context, tableName string) error {
+	db, err := Conn(ctx)
+	if err != nil {
+		return err
+	}
+
+	err = db.Raw(
+		"TRUNCATE TABLE RETURN ? IDENTITY CASCADE",
+		tableName,
+	).Error
+	if err != nil {
+		return err
+	}
+
+	return nil
 }

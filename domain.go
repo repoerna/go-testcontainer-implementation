@@ -1,1 +1,0 @@
-package go_testcontainer_implementation
