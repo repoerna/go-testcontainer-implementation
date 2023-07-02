@@ -1,7 +1,6 @@
 package user_test
 
 import (
-	"context"
 	"github.com/google/uuid"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
@@ -13,7 +12,6 @@ import (
 var _ = Describe("Repository", func() {
 	var err error
 	var conn *gorm.DB
-	ctx := context.Background()
 
 	id := uuid.New()
 	newUser := User{
@@ -23,7 +21,8 @@ var _ = Describe("Repository", func() {
 	}
 
 	It("prepare connection", func() {
-		conn, err = postgresdb.Conn(ctx)
+		dsn := postgresdb.GetMappedDBURL()
+		conn, err = postgresdb.Conn(dsn)
 		Expect(err).NotTo(HaveOccurred())
 	})
 

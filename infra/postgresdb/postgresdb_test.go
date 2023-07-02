@@ -17,6 +17,7 @@ var _ = Describe("Setup Postgres Container", func() {
 	var err error
 	var container testcontainers.Container
 	var ctx = context.Background()
+	var dsn string
 
 	Context("spin up postgres container", Ordered, func() {
 		AfterAll(func() {
@@ -28,6 +29,7 @@ var _ = Describe("Setup Postgres Container", func() {
 		It("no error occurred", func() {
 			container, err = SpinUpPostgres(ctx)
 			Expect(err).NotTo(HaveOccurred())
+			dsn = GetMappedDBURL()
 		})
 
 		It("set the DATABASE_URL env", func() {
@@ -38,7 +40,7 @@ var _ = Describe("Setup Postgres Container", func() {
 
 		When("container ready", Ordered, func() {
 			It("can establish connection", func() {
-				conn, err := Conn(ctx)
+				conn, err := Conn(dsn)
 				Expect(err).NotTo(HaveOccurred())
 
 				db, err := conn.DB()
@@ -50,12 +52,12 @@ var _ = Describe("Setup Postgres Container", func() {
 			})
 
 			It("can run migration", func() {
-				err := RunMigration(ctx, "testmigration")
+				err := RunMigration("testmigration")
 				Expect(err).NotTo(HaveOccurred())
 			})
 
 			It("can truncate table", func() {
-				err := TruncateTable(ctx, "table_test")
+				err := TruncateTable("table_test")
 				Expect(err).NotTo(HaveOccurred())
 			})
 		})

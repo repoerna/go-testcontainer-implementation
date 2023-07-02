@@ -1,15 +1,12 @@
 package postgresdb
 
 import (
-	"context"
 	"errors"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
-	"os"
 )
 
-func Conn(ctx context.Context) (*gorm.DB, error) {
-	dsn := os.Getenv("DATABASE_URL")
+func Conn(dsn string) (*gorm.DB, error) {
 	if dsn == "" {
 		return nil, errors.New("database source name is empty")
 	}

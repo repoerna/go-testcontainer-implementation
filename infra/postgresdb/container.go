@@ -21,14 +21,21 @@ const (
 	TestDbName     = "test_db"
 )
 
-func setDBURL(mappedPort nat.Port) {
-	os.Setenv("DATABASE_URL", fmt.Sprintf("postgres://%s:%s@%s:%s/%s?sslmode=disable",
+func setMappedDBURL(mappedPort nat.Port) {
+	err := os.Setenv("DATABASE_URL", fmt.Sprintf("postgres://%s:%s@%s:%s/%s?sslmode=disable",
 		TestDbUsername,
 		TestDbPassword,
 		TestDbHost,
 		mappedPort.Port(),
 		TestDbName,
 	))
+	if err != nil {
+		log.Fatal(err)
+	}
+}
+
+func GetMappedDBURL() string {
+	return os.Getenv("DATABASE_URL")
 }
 
 func SpinUpPostgres(ctx context.Context) (testcontainers.Container, error) {
@@ -73,31 +80,32 @@ func SpinUpPostgres(ctx context.Context) (testcontainers.Container, error) {
 	})
 
 	if err != nil {
-		fmt.Println(err.Error())
+		log.Fatal(err)
 		return nil, err
 	}
 
 	defer func() {
 		if r := recover(); r != nil {
-			container.Terminate(ctx)
-			fmt.Println("Panic occurred!")
+			err := container.Terminate(ctx)
+			if err != nil {
+				log.Fatal(err)
+			}
 		}
 	}()
-
-	//ip, _ := container.Host(*ctx)
 
 	// get mapped port
 	mappedExposedPort, err := container.MappedPort(ctx, natPort)
 	if err != nil {
 		log.Fatal(err)
 	}
-	setDBURL(mappedExposedPort)
+	setMappedDBURL(mappedExposedPort)
 
 	return container, nil
 }
 
-func RunMigration(ctx context.Context, filepath string) error {
-	conn, err := Conn(ctx)
+func RunMigration(filepath string) error {
+	dsn := GetMappedDBURL()
+	conn, err := Conn(dsn)
 	if err != nil {
 		return err
 	}
@@ -129,8 +137,9 @@ func RunMigration(ctx context.Context, filepath string) error {
 
 }
 
-func TruncateTable(ctx context.Context, tableName string) error {
-	db, err := Conn(ctx)
+func TruncateTable(tableName string) error {
+	dsn := GetMappedDBURL()
+	db, err := Conn(dsn)
 	if err != nil {
 		return err
 	}

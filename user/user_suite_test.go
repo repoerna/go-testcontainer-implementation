@@ -25,10 +25,7 @@ var _ = BeforeSuite(func() {
 	container, err = postgresdb.SpinUpPostgres(ctx)
 	Expect(err).NotTo(HaveOccurred())
 
-	//conn, err := postgresdb.Conn(ctx)
-	//Expect(err).NotTo(HaveOccurred())
-
-	err = postgresdb.RunMigration(ctx, "../db/migration")
+	err = postgresdb.RunMigration("../db/migration")
 	Expect(err).NotTo(HaveOccurred())
 })
 
